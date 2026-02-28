@@ -201,6 +201,7 @@ class VLMPlanner():
         # some models do not support json scheme, add style into prompt
         if 'claude' in self.model_name or 'InternVL' in self.model_name or 'Qwen2-VL' in self.model_name or 'Qwen2.5-VL' in self.model_name or self.model_type == 'custom':
             prompt = prompt + template_lang if self.language_only else prompt + template
+        print(f"Full Prompt:\n{prompt}\n")
 
         if self.model_type == 'custom':
             return self.act_custom(prompt, obs) 

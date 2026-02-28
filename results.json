@@ -1,0 +1,93 @@
+chat_history = True:
+base:
+{
+    "reward": 0.020919312169312174,
+    "task_success": 0.18333333333333332,
+    "num_steps": 17.983333333333334,
+    "planner_steps": 17.5,
+    "planner_output_error": 0.0,
+    "episode_elapsed_seconds": 55.15374350945155
+}
+common_sense:
+{
+    "reward": 0.02507335257335257,
+    "task_success": 0.21666666666666667,
+    "num_steps": 17.583333333333332,
+    "planner_steps": 15.75,
+    "planner_output_error": 0.0,
+    "episode_elapsed_seconds": 55.80028837124507
+}
+complex_intruction:
+{
+    "reward": 0.03136382136382136,
+    "task_success": 0.3,
+    "num_steps": 16.983333333333334,
+    "planner_steps": 16.366666666666667,
+    "planner_output_error": 0.0,
+    "episode_elapsed_seconds": 54.971190706888834
+}
+long_horizon:
+{
+    "reward": 0.0016666666666666668,
+    "task_success": 0.016666666666666666,
+    "num_steps": 19.833333333333332,
+    "planner_steps": 18.45,
+    "planner_output_error": 0.0,
+    "episode_elapsed_seconds": 65.191579580307
+}
+visual_appearance:
+{
+    "reward": 0.017744292744292744,
+    "task_success": 0.15,
+    "num_steps": 18.316666666666666,
+    "planner_steps": 17.816666666666666,
+    "planner_output_error": 0.0,
+    "episode_elapsed_seconds": 58.26278266509374
+}
+
+chat_hitory = False:
+base:
+{
+    "reward": 0.04066044822623771,
+    "task_success": 0.4666666666666667,
+    "num_steps": 16.366666666666667,
+    "planner_steps": 12.516666666666667,
+    "planner_output_error": 0.0,
+    "episode_elapsed_seconds": 41.218854208787285
+}
+commom_sense:
+{
+    "reward": 0.037035192118396454,
+    "task_success": 0.38333333333333336,
+    "num_steps": 16.666666666666668,
+    "planner_steps": 11.533333333333333,
+    "planner_output_error": 0.1,
+    "episode_elapsed_seconds": 41.46544295549393
+}
+complex_instruction:
+{
+    "reward": 0.03214351144498204,
+    "task_success": 0.3333333333333333,
+    "num_steps": 16.95,
+    "planner_steps": 12.6,
+    "planner_output_error": 0.016666666666666666,
+    "episode_elapsed_seconds": 43.25589630206426
+}
+long_horizon:
+{
+    "reward": 0.006432748538011695,
+    "task_success": 0.08333333333333333,
+    "num_steps": 19.466666666666665,
+    "planner_steps": 13.85,
+    "planner_output_error": 0.0,
+    "episode_elapsed_seconds": 48.89604628483455
+}
+visual_appearance:
+{
+    "reward": 0.02451290911817227,
+    "task_success": 0.2833333333333333,
+    "num_steps": 17.883333333333333,
+    "planner_steps": 13.9,
+    "planner_output_error": 0.03333333333333333,
+    "episode_elapsed_seconds": 46.921661126613614
+}

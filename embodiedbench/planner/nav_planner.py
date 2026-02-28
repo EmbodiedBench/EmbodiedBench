@@ -39,7 +39,7 @@ class EBNavigationPlanner():
 
         self.multiview = multiview
         self.multistep = multistep
-        self.visual_icl = visual_icl
+        self.visual_icl = visual_icl  # 是否在提示中加入视觉 in-context learning 示例
 
         if not self.visual_icl:
             self.examples = examples[:n_shot]

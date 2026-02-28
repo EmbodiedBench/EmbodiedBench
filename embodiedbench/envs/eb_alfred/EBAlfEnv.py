@@ -45,6 +45,18 @@ def get_global_action_space():
         list: A list of supported action strings for various object interactions
     """
     action_space = []
+
+    # Low-level navigation actions (same as eb_navigation)
+    action_space.extend([
+        "Move forward by 0.25",
+        "Move backward by 0.25",
+        "Move rightward by 0.25",
+        "Move leftward by 0.25",
+        "Rotate to the right by 90 degrees.",
+        "Rotate to the left by 90 degrees.",
+        "Tilt the camera upward by 30 degrees.",
+        "Tilt the camera downward by 30 degrees.",
+    ])
     
     # Generate find actions for all objects
     findable_objs = alfred_objs
@@ -249,7 +261,7 @@ class EBAlfEnv(gym.Env):
         object_toggles = traj_data['scene']['object_toggles']
 
         scene_name = 'FloorPlan%d' % scene_num
-        self.episode_language_instruction = task["instruction"] 
+        self.episode_language_instruction = task["instruction"]
         # Restore scene configuration
         logger.info(f"Restoring scene {scene_name}...")
         self.env.reset(scene_name)
@@ -306,7 +318,7 @@ class EBAlfEnv(gym.Env):
             if (self.name_to_id_dict is not None) and lang_action_split[-1] in self.name_to_id_dict: # multiple instances
                 lang_action = ' '.join(lang_action_split[:-1] + [self.name_to_id_dict[lang_action_split[-1]]])
 
-        event = self.env.llm_skill_interact(lang_action)
+        event = self.env.llm_skill_interact(lang_action)  # 最底层的Thorenv执行动作
         if not event['success']:
             self._cur_invalid_actions += 1
         
