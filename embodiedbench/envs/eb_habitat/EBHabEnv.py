@@ -109,7 +109,7 @@ def transform_action_to_natural_language(skill_set):
 
 
 class EBHabEnv(gym.Env):
-    def __init__(self, eval_set='train', exp_name='', down_sample_ratio=1.0, start_epi_index=0, resolution=500, recording=False):
+    def __init__(self, eval_set='train', exp_name='', down_sample_ratio=1.0, start_epi_index=0, resolution=600, recording=False):
         """
         Initialize the HabitatRearrange environment.
         """

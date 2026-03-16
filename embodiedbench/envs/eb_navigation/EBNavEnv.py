@@ -40,7 +40,7 @@ DISCRETE_SKILLSET = [
 
 
 class EBNavigationEnv(gym.Env):
-    def __init__(self, eval_set='base', exp_name='test_base', down_sample_ratio=1.0, fov = 100, multiview = False, boundingbox = False, multistep = False,  resolution = 500, selected_indexes =[]):
+    def __init__(self, eval_set='base', exp_name='test_base', down_sample_ratio=1.0, fov = 100, multiview = False, boundingbox = False, multistep = False,  resolution = 600, selected_indexes =[]):
         """
         A wrapper for AI2-THOR ManipulaTHOR environment.
 
@@ -215,6 +215,42 @@ class EBNavigationEnv(gym.Env):
         else:
             print(f"Invalid action index: {action_index}")
 
+    def _mark_action_failed(self, action_name, message):
+        if self.env.last_event is None:
+            return
+
+        self.env.last_event.metadata['lastActionSuccess'] = False
+        self.env.last_event.metadata['errorMessage'] = message
+        self.env.last_event.metadata['lastAction'] = action_name
+        self._last_event = self.env.last_event
+
+    def named_action_mapper(self, action_name):
+        normalized = str(action_name).strip()
+        normalized_no_period = normalized[:-1] if normalized.endswith('.') else normalized
+
+        if normalized_no_period == "Move forward by 0.25" or normalized in ("MoveAhead", "MoveAhead_25"):
+            self._last_event = self.env.step(action="MoveAhead", moveMagnitude=0.25)
+        elif normalized_no_period == "Move backward by 0.25" or normalized in ("MoveBack", "MoveBack_25"):
+            self._last_event = self.env.step(action="MoveBack", moveMagnitude=0.25)
+        elif normalized_no_period == "Move rightward by 0.25" or normalized in ("MoveRight", "MoveRight_25"):
+            self._last_event = self.env.step(action="MoveRight", moveMagnitude=0.25)
+        elif normalized_no_period == "Move leftward by 0.25" or normalized in ("MoveLeft", "MoveLeft_25"):
+            self._last_event = self.env.step(action="MoveLeft", moveMagnitude=0.25)
+        elif normalized_no_period == "Rotate to the right by 90 degrees" or normalized in ("RotateRight", "RotateRight_90"):
+            self._last_event = self.env.step(action="RotateRight", degrees=90)
+        elif normalized_no_period == "Rotate to the left by 90 degrees" or normalized in ("RotateLeft", "RotateLeft_90"):
+            self._last_event = self.env.step(action="RotateLeft", degrees=90)
+        elif normalized_no_period == "Tilt the camera upward by 30 degrees" or normalized == "LookUp":
+            self._last_event = self.env.step(action="LookUp", degrees=30)
+        elif normalized_no_period == "Tilt the camera downward by 30 degrees" or normalized == "LookDown":
+            self._last_event = self.env.step(action="LookDown", degrees=30)
+        elif normalized_no_period == "Tilt the camera upward by 15 degrees" or normalized == "LookUp_15":
+            self._last_event = self.env.step(action="LookUp", degrees=15)
+        elif normalized_no_period == "Tilt the camera downward by 15 degrees" or normalized == "LookDown_15":
+            self._last_event = self.env.step(action="LookDown", degrees=15)
+        else:
+            self._mark_action_failed(normalized, f"Unsupported navigation action: {normalized}")
+
     def measure_success(self):
         # success measurement
         agent_position = self.env.last_event.metadata["agent"]["position"]
@@ -235,7 +271,7 @@ class EBNavigationEnv(gym.Env):
 
         
 
-    def step(self, action: int, reasoning, i_flag):
+    def step(self, action, reasoning=''):
         """
         Perform an action in the environment.
 
@@ -248,39 +284,36 @@ class EBNavigationEnv(gym.Env):
         info = {}
 
         self._current_step += 1
+        action_id = -3
+        action_description = str(action)
 
-        if self._current_step>=self._max_episode_steps:
-
-            if type(action)!=int or action > 7 or action < 0:
-                action = np.random.randint(8)
-
-            self.discrete_action_mapper(action)
-            reward, distance = self.measure_success()
-            done = True
-            info['action_description'] = self.language_skill_set[action]
-
-        else:
-            if type(action)!=int or action > 7 or action < 0:
-                action = np.random.randint(8)
-
-            self.discrete_action_mapper(action)
-            reward, distance = self.measure_success()
-            if reward>0:
-                done = True
+        if isinstance(action, int):
+            action_id = action
+            if 0 <= action < len(self.language_skill_set):
+                action_description = self.language_skill_set[action]
+                self.discrete_action_mapper(action)
             else:
-                done = False
-            info['action_description'] = self.language_skill_set[action]
-
-        #info['action_description'] = self.language_skill_set[action]
+                self._mark_action_failed(
+                    action_description,
+                    f"Invalid discrete action id: {action}",
+                )
+        elif isinstance(action, str):
+            self.named_action_mapper(action)
+        else:
+            self._mark_action_failed(
+                action_description,
+                f"Unsupported action type: {type(action).__name__}",
+            )
 
         obs = {
                     'head_rgb': self.env.last_event.frame,
                 }
         reward, distance = self.measure_success()
+        done = bool(reward > 0 or self._current_step >= self._max_episode_steps)
 
         ## test calculate reward
         info['distance'] = distance
-        info['env_feedback'] = self.get_env_feedback(self._last_event)
+        info['env_feedback'] = self.get_env_feedback(self._last_event, requested_action=action_description)
         info['reasoning'] = reasoning
         # info['reflection'] = reasoning['reasoning_and_reflection']
         # info['plan'] = reasoning['language_plan']
@@ -289,21 +322,15 @@ class EBNavigationEnv(gym.Env):
         info['episode_elapsed_seconds'] = time.time() - self._episode_start_time
         info['task_success'] = reward
         info['last_action_success'] = self.env.last_event.metadata['lastActionSuccess']
-        info['action_id'] = action
+        info['action_id'] = action_id if isinstance(action, int) else -3
+        info['action_description'] = action_description
         # info['reasoning'] = reasoning
 
         self.episode_log.append(info)
 
-        if i_flag == 1:
-            self.save_episode_log_per_step(1)
-        else:
-            self.save_episode_log_per_step(0)
-        
-        self.episode_log = []
-
         return obs, reward, done, info
         
-    def get_env_feedback(self, event):
+    def get_env_feedback(self, event, requested_action=None):
         """
         To extract relevant information from the event to construct a feedback dictionary.
 
@@ -335,10 +362,11 @@ class EBNavigationEnv(gym.Env):
             }
 
         msg = ''
+        action_label = requested_action or feedback['lastAction']
         if feedback["lastActionSuccess"]:
-            msg += f"Last action {feedback['lastAction']} executed successfully."
+            msg += f"Last action {action_label} executed successfully."
         else:
-            msg += f"Last action {feedback['lastAction']} is invalid. {feedback['errorMessage']}"
+            msg += f"Last action {action_label} is invalid. {feedback['errorMessage']}"
         return msg
 
     def seed(self, seed=None):
@@ -425,21 +453,22 @@ class EBNavigationEnv(gym.Env):
                             import pdb;pdb.set_trace()
                         f.write('\n') 
 
-    # def save_episode_log(self):
-    #     if not os.path.exists(self.log_path):
-    #         os.makedirs(self.log_path)
-    #     time_stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
-    #     filename = 'episode_{}_step_{}_{}.json'.format(self._current_episode_num, self._current_step, time_stamp)
-    #     if len(self.episode_log):
-    #         with open(os.path.join(self.log_path, filename), 'w') as f:
-    #             for item in self.episode_log:
-    #                 if 'object_states' in item:
-    #                     item.pop('object_states')
-    #                 try:
-    #                     json.dump(item, f, ensure_ascii=False)
-    #                 except:
-    #                     import pdb;pdb.set_trace()
-    #                 f.write('\n') 
+    def save_episode_log(self):
+        if not os.path.exists(self.log_path):
+            os.makedirs(self.log_path)
+
+        episode_idx = self._current_episode_num if not len(self.selected_indexes) else self.selected_indexes[self._current_episode_num - 1] + 1
+        filename = 'episode_{}_step_{}.json'.format(episode_idx, self._current_step)
+        if len(self.episode_log):
+            with open(os.path.join(self.log_path, filename), 'w') as f:
+                for item in self.episode_log:
+                    if 'object_states' in item:
+                        item.pop('object_states')
+                    try:
+                        json.dump(item, f, ensure_ascii=False)
+                    except:
+                        import pdb;pdb.set_trace()
+                    f.write('\n')
 
     def close(self):
         """Close the environment."""
@@ -464,11 +493,10 @@ if __name__ == "__main__":
         print(env.language_skill_set[action])
         
         # Execute action
-        obs, reward, done, info = env.step(action, "", 1)
+        obs, reward, done, info = env.step(action, "")
         print(reward, done, info)
         # Optional rendering and image saving
         env.save_image()
         if done:
             break
-    env.close()
     env.close()

@@ -5,11 +5,12 @@ import logging
 import yaml
 
 logger = logging.getLogger("EB_logger")
-if not logger.hasHandlers():
+if not logger.handlers:
     formatter = logging.Formatter("[%(asctime)s][%(levelname)s] - %(message)s")
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
+logger.propagate = False
 
 link_path = os.path.join(os.path.dirname(__file__), 'envs/eb_habitat/data')
 try:
@@ -47,8 +48,6 @@ def get_evaluator(env_name: str):
 
 @hydra.main(config_path="./configs", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
-    logging.getLogger().handlers.clear()
-    
     if 'log_level' not in cfg or cfg.log_level == "INFO":
         logger.setLevel(logging.INFO)
     if 'log_level' in cfg and cfg.log_level == "DEBUG":

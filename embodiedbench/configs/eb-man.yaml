@@ -9,7 +9,7 @@ n_shots: 4
 multiview: 0
 detection_box: 1
 multistep: 0
-resolution: 500
+resolution: 600
 exp_name: baseline
 visual_icl: 0
 tp: 1

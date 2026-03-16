@@ -17,4 +17,8 @@ resolution: null
 exp_name: null
 visual_icl: null
 tp: null
+easyr1_format: null
+env_feedback: null
+memory_compression: null
+segment_len: null
 log_level: null

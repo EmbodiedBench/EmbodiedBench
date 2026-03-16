@@ -24,12 +24,14 @@ class RemoteModel:
         model_type='remote',
         language_only=False,
         tp=1,
-        task_type=None # used to distinguish between manipulation and other environments
+        task_type=None, # used to distinguish between manipulation and other environments
+        use_easyr1_format=False
     ):
         self.model_name = model_name
         self.model_type = model_type
         self.language_only = language_only
         self.task_type = task_type
+        self.use_easyr1_format = use_easyr1_format
 
         if self.model_type == 'local':
             backend_config = PytorchEngineConfig(session_len=12000, dtype='float16', tp=tp)
@@ -106,7 +108,26 @@ class RemoteModel:
             else:
                 raise ValueError(f"Unsupported model name: {self.model_name}")
 
+    def _call_openai_text(self, message_history: list, model_name=None):
+        response = self.model.chat.completions.create(
+            model=model_name or self.model_name,
+            messages=message_history,
+            temperature=temperature,
+            max_tokens=max_completion_tokens
+        )
+        return response.choices[0].message.content
+
     def _call_local(self, message_history: list):
+        if self.use_easyr1_format:
+            response = self.model(
+                message_history,
+                gen_config=GenerationConfig(
+                    temperature=temperature,
+                    max_new_tokens=max_completion_tokens,
+                )
+            )
+            return response.text
+
         if self.task_type == 'manip':
             response_format = {
                 "type": "json_schema",
@@ -154,6 +175,9 @@ class RemoteModel:
         if not self.language_only:
             message_history = convert_format_2gemini(message_history)
 
+        if self.use_easyr1_format:
+            return self._call_openai_text(message_history)
+
         if self.task_type == 'manip':
             response = self.model.beta.chat.completions.parse(
                 model=self.model_name, 
@@ -175,6 +199,8 @@ class RemoteModel:
         return str(response.choices[0].message.parsed.model_dump_json())
 
     def _call_gpt(self, message_history: list):
+        if self.use_easyr1_format:
+            return self._call_openai_text(message_history)
 
         if not self.language_only:
             if self.task_type == 'manip':
@@ -203,6 +229,9 @@ class RemoteModel:
         if not self.language_only:
             message_history = convert_format_2gemini(message_history)
 
+        if self.use_easyr1_format:
+            return self._call_openai_text(message_history)
+
         if not self.language_only:
             if self.task_type == 'manip':
                 response_format=dict(type='json_schema',  json_schema=dict(name='embodied_planning',schema=vlm_generation_guide_manip))
@@ -226,6 +255,9 @@ class RemoteModel:
         return out
     
     def _call_llama90(self, message_history: list):
+        if self.use_easyr1_format:
+            return self._call_openai_text(message_history, model_name="accounts/fireworks/models/llama-v3p2-90b-vision-instruct")
+
         if self.task_type == "manip":
             response = self.model.chat.completions.create(
                 model="accounts/fireworks/models/llama-v3p2-90b-vision-instruct",
@@ -249,6 +281,9 @@ class RemoteModel:
 
         if not self.language_only:
             message_history = convert_format_2gemini(message_history)
+
+        if self.use_easyr1_format:
+            return self._call_openai_text(message_history)
 
         if not self.language_only:
             if self.task_type == 'manip':
@@ -275,6 +310,9 @@ class RemoteModel:
     def _call_qwen72b(self, message_history):
         if not self.language_only:
             message_history = convert_format_2gemini(message_history)
+
+        if self.use_easyr1_format:
+            return self._call_openai_text(message_history)
 
         if not self.language_only:
             if self.task_type == 'manip':
@@ -304,6 +342,9 @@ class RemoteModel:
 
         # if not self.language_only:
         #     message_history = convert_format_2gemini(message_history)
+
+        if self.use_easyr1_format:
+            return self._call_openai_text(message_history)
 
         # no use, lmdeploy use support json schema only if it is pytorch-backended
         if not self.language_only:
@@ -367,4 +408,3 @@ if __name__ == "__main__":
 
     response = model.respond(messages)
     print(response)
-

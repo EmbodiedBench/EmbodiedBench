@@ -106,7 +106,7 @@ class EBAlfEnv(gym.Env):
         action_space (gym.spaces.Discrete): Discrete action space 
         language_skill_set (list): Readable action descriptions
     """
-    def __init__(self, eval_set='base', exp_name='', down_sample_ratio=1.0, selected_indexes=[], detection_box=False, resolution=500):
+    def __init__(self, eval_set='base', exp_name='', down_sample_ratio=1.0, selected_indexes=[], detection_box=False, resolution=600):
         """
         Initialize the AI2THOR environment.
         """
@@ -310,10 +310,12 @@ class EBAlfEnv(gym.Env):
             lang_action  = self.language_skill_set[action]
         elif type(action) == str:
             lang_action  = action
+        elif type(action) == dict:
+            lang_action = action
         else:
             raise NotImplementedError
 
-        if 'find' in lang_action or 'open' in lang_action or 'close' in lang_action:
+        if isinstance(lang_action, str) and ('find' in lang_action or 'open' in lang_action or 'close' in lang_action):
             lang_action_split = lang_action.split(' ')
             if (self.name_to_id_dict is not None) and lang_action_split[-1] in self.name_to_id_dict: # multiple instances
                 lang_action = ' '.join(lang_action_split[:-1] + [self.name_to_id_dict[lang_action_split[-1]]])
@@ -347,8 +349,13 @@ class EBAlfEnv(gym.Env):
                                     "cleaned_objects" : self.env.cleaned_objects,
                                     "visible_objs": [obj['objectType'] for obj in self.env.last_event.metadata['objects'] if obj['visible']]
                                 }
-        info['action_id'] = action
-        info['action_description'] = self.language_skill_set[action] if type(action) == int else action
+        info['action_id'] = action if isinstance(action, int) else -3
+        if isinstance(action, int):
+            info['action_description'] = self.language_skill_set[action]
+        elif isinstance(action, str):
+            info['action_description'] = action
+        else:
+            info['action_description'] = json.dumps(action, ensure_ascii=False)
         info['reasoning'] = reasoning
         self.episode_log.append(info)
         return obs, reward, done, info
@@ -365,15 +372,25 @@ class EBAlfEnv(gym.Env):
         if info["success"]:
             msg += f"Last action executed successfully."
         else:
-            if 'is not visible' in info['message'] and '|' in info['message']:
-                recep_id = info['message'].split('because it is in ')[1].split('. Note')[0]
-                if recep_id not in self.id_to_name_dict:
-                    pos = recep_id.split('|')[0]
+            raw_message = info.get('message', '')
+            if (
+                isinstance(raw_message, str)
+                and 'is not visible' in raw_message
+                and 'because it is in ' in raw_message
+            ):
+                recep_fragment = raw_message.split('because it is in ', 1)[1]
+                recep_id = recep_fragment.split('. Note', 1)[0].strip()
+                if recep_id:
+                    if self.id_to_name_dict is not None and recep_id in self.id_to_name_dict:
+                        pos = self.id_to_name_dict[recep_id]
+                    else:
+                        pos = recep_id.split('|')[0]
+                    prefix = raw_message.split('because it is in ', 1)[0]
+                    message = f"{prefix}because it is in {pos}. Go there to pick the object instead."
                 else:
-                    pos = self.id_to_name_dict[recep_id]
-                message = info['message'].split(recep_id)[0] + pos + '. Go there to pick the object instead.'
+                    message = raw_message
             else:
-                message = info['message']
+                message = raw_message
             msg += f"Last action is invalid. {message}"
         return msg
     
@@ -448,4 +465,3 @@ if __name__ == "__main__":
         if done:
             break
     env.close()
-

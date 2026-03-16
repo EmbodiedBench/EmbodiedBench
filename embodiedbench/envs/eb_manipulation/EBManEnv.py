@@ -33,7 +33,7 @@ ValidEvalSets = ['base', 'common_sense', 'complex', 'spatial', 'visual']
 class EBManEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
-    def __init__(self, eval_set, render_mode='human', img_size=(500, 500), down_sample_ratio=1.0, log_path = None, selected_indexes=[]):
+    def __init__(self, eval_set, render_mode='human', img_size=(600, 600), down_sample_ratio=1.0, log_path = None, selected_indexes=[]):
         obs_config = ObservationConfig()
         obs_config.set_all(True)
         obs_config.set_image_size(img_size)

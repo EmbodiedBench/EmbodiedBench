@@ -246,7 +246,7 @@ if __name__ == '__main__':
     parser.add_argument('--multiview', type=int, default=0)
     parser.add_argument('--detection_box', type=int, default=1)
     parser.add_argument('--multistep', type=int, default=0)
-    parser.add_argument('--resolution', type=int, default=500)
+    parser.add_argument('--resolution', type=int, default=600)
     parser.add_argument('--exp_name', type=str)
     parser.add_argument('--visual_icl', type=int, default=0)
     parser.add_argument('--tp', type=int, default=1, help='number of tensor parallel splits of the model parameters')

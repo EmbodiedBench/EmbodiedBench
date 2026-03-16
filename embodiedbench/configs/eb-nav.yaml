@@ -9,8 +9,12 @@ n_shots: 3
 multiview: False
 detection_box: False
 multistep: False
-resolution: 500
+resolution: 600
 exp_name: navigation_baseline
 visual_icl: False
 tp: 1
-truncate: True
+truncate: False
+env_feedback: True
+easyr1_format: null
+memory_compression: 0
+segment_len: 1

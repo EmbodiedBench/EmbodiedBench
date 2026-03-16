@@ -62,7 +62,7 @@ class EB_HabitatEvaluator():
             logger.info(f'Current eval set: {eval_set}')
             exp_name = f"{self.model_name.split('/')[-1]}_{self.config['exp_name']}/{eval_set}" if len(self.config['exp_name']) else f"{self.model_name.split('/')[-1]}/{eval_set}"
             self.env = EBHabEnv(eval_set=self.eval_set, down_sample_ratio=self.config['down_sample_ratio'], exp_name=exp_name,
-                                             start_epi_index=self.config.get('start_epi_index', 0), resolution=self.config.get('resolution', 500))
+                                             start_epi_index=self.config.get('start_epi_index', 0), resolution=self.config.get('resolution', 600))
 
             model_type = self.config.get('model_type', 'remote')
             self.planner = VLMPlanner(self.model_name, model_type, self.env.language_skill_set, self.system_prompt, examples, n_shot=self.config['n_shots'], obs_key='head_rgb',
@@ -201,12 +201,12 @@ if __name__ == '__main__':
         'down_sample_ratio': 1.0, 
         'model_type': 'remote', # 'local'
         'language_only': 0,
-        'exp_name': 'vlm_10shots_imgsize500',
+        'exp_name': 'vlm_10shots_imgsize600',
         'chat_history': 0,  
         'start_epi_index': 0,
         'eval_sets': ['base', 'common_sense', 'complex_instruction', 'spatial_relationship',  'visual_appearance' , 'long_horizon'],
         'multistep':0, 
-        'resolution': 500, 
+        'resolution': 600, 
         'env_feedback': 1,
         'tp': 1,
     }
@@ -223,5 +223,4 @@ if __name__ == '__main__':
         print(f"Error: The symbolic link {link_path} does not exist.")
     except OSError as e:
         print(f"Error: {e}")
-
 

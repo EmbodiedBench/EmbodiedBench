@@ -7,7 +7,7 @@ eval_sets: []
 chat_history: False
 n_shots: 10
 multistep: False
-resolution: 500
+resolution: 600
 exp_name: baseline
 env_feedback: True
 tp: 1
