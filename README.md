@@ -191,6 +191,8 @@ conda activate embench_nav
 python -m embodiedbench.envs.eb_navigation.EBNavEnv
 ```
 
+> **Note:** If EB-Navigation evaluation is unstable on your server, especially if it frequently times out, try using the `Linux64` AI2-THOR platform in `embodiedbench/envs/eb_navigation/EBNavEnv.py`. Set the import around line 10 to `from ai2thor.platform import Linux64` and the controller config around line 59 to `"platform": Linux64`. This is often more stable when a working X display is available, such as after starting the headless server above.
+
 ## EB-Manipulation
 * Install Coppelia Simulator
 
