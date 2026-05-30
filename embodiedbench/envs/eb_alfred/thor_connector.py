@@ -155,6 +155,45 @@ class ThorConnector(ThorEnv):
         x = math.radians(x)
         y = math.radians(y)
         return math.degrees(math.atan2(math.sin(x - y), math.cos(x - y)))
+
+    def target_visible_in_frame(self, obj_id):
+        obj_visible = False
+        for obj in self.last_event.metadata['objects']:
+            if obj['objectId'] == obj_id:
+                obj_visible = obj['visible']
+                break
+
+        if not obj_visible:
+            return False
+
+        detections = getattr(self.last_event, 'instance_detections2D', None)
+        if detections is not None and obj_id not in detections:
+            return False
+
+        return True
+
+    def agent_pose_is_valid(self, expected_loc=None):
+        agent_pos = self.last_event.metadata['agent']['position']
+
+        if expected_loc is not None:
+            expected = np.array(expected_loc, dtype=np.float32)
+            actual = np.array([agent_pos['x'], agent_pos['y'], agent_pos['z']], dtype=np.float32)
+            if abs(actual[1] - expected[1]) > 0.5:
+                return False
+            if np.linalg.norm(actual[[0, 2]] - expected[[0, 2]]) > 0.5:
+                return False
+
+        return True
+
+    def get_hidden_receptacle_message(self, target_obj, obj_data):
+        parent_receptacles = obj_data.get('parentReceptacles')
+        if not parent_receptacles:
+            return None
+
+        return (
+            f'{target_obj} may not be visible because it is inside a receptacle in sight '
+            f'or otherwise occluded. Find or open the receptacle first.'
+        )
     
     def nav_obj(self, target_obj: str, prefer_sliced=False):
         objects = self.last_event.metadata['objects']
@@ -168,7 +207,7 @@ class ThorConnector(ThorEnv):
             target_obj = target_obj.split('|')[0]
             tmp_id, tmp_obj_data = self.get_obj_id_from_name(target_obj, priority_in_visibility=True, priority_sliced=prefer_sliced)
             # if sliced object 
-            if 'Sliced' in tmp_id and obj_id in tmp_id:
+            if tmp_id is not None and 'Sliced' in tmp_id and obj_id in tmp_id:
                 obj_id = tmp_id
                 obj_data = tmp_obj_data
         else:
@@ -221,7 +260,7 @@ class ThorConnector(ThorEnv):
                         continue
 
                 # calculate desired horizon angle
-                camera_height = self.agent_height + constants.CAMERA_HEIGHT_OFFSET
+                camera_height = closest_loc[1] + constants.CAMERA_HEIGHT_OFFSET
                 xz_dist = math.hypot(loc['x'] - closest_loc[0], loc['z'] - closest_loc[2])
                 hor_angle = math.atan2((loc['y'] - camera_height), xz_dist)
                 hor_angle = (180 / math.pi) * hor_angle  # in degrees
@@ -230,17 +269,38 @@ class ThorConnector(ThorEnv):
                 # hor_angle = 0
 
                 # teleport ### Full
-                super().step(dict(action="TeleportFull", x=closest_loc[0], y=self.agent_height, z=closest_loc[2], rotation=rot_angle, horizon=-hor_angle))
+                for horizon_offset in [0, -15, 15, -30, 30]:
+                    target_horizon = np.clip(-hor_angle + horizon_offset, -30, 60)
+                    super().step(dict(
+                        action="TeleportFull",
+                        x=float(closest_loc[0]),
+                        y=float(closest_loc[1]),
+                        z=float(closest_loc[2]),
+                        rotation=float(rot_angle),
+                        horizon=float(target_horizon),
+                        standing=True
+                    ))
 
-                if not self.last_event.metadata['lastActionSuccess']:
-                    log.warning(
-                        f"TeleportFull action failed: {self.last_event.metadata['errorMessage']}, trying again...")
-                else:
-                    teleport_success = True
+                    if not self.last_event.metadata['lastActionSuccess']:
+                        log.warning(
+                            f"TeleportFull action failed: {self.last_event.metadata['errorMessage']}, trying again...")
+                    elif not self.agent_pose_is_valid(closest_loc):
+                        log.warning(f"TeleportFull succeeded but agent pose is invalid, trying another view...")
+                    elif not self.target_visible_in_frame(obj_id):
+                        log.warning(f"TeleportFull succeeded but {obj_id} is not visible, trying another view...")
+                    else:
+                        teleport_success = True
+                        break
+
+                if teleport_success:
                     break
 
             if not teleport_success:
-                ret_msg = f'Cannot move to {target_obj}'
+                hidden_recep_msg = self.get_hidden_receptacle_message(target_obj, objects[obj_idx])
+                if hidden_recep_msg is not None:
+                    ret_msg = hidden_recep_msg
+                else:
+                    ret_msg = f'Cannot move to a visible view of {target_obj}'
 
         return ret_msg
 
