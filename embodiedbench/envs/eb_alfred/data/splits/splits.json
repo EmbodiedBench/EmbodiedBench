@@ -23,7 +23,7 @@
         {
             "task": "pick_and_place_simple-SprayBottle-None-Toilet-422/trial_T20190909_124835_952557",
             "repeat_idx": 2,
-            "instruction": "Put a bottle on the back of the toilet."
+            "instruction": "Put a spray bottle on the back of the toilet."
         },
         {
             "task": "pick_and_place_with_movable_recep-ButterKnife-Cup-SinkBasin-7/trial_T20190908_233333_221307",
@@ -270,7 +270,7 @@
         {
             "task": "pick_and_place_simple-SprayBottle-None-Toilet-422/trial_T20190909_124835_952557",
             "repeat_idx": 2,
-            "instruction": "Keep a closable liquid container by placing it on the back of the toilet."
+            "instruction": "Put the cleaning liquid container with a trigger handle on the back of the toilet."
         },
         {
             "task": "pick_and_place_with_movable_recep-ButterKnife-Cup-SinkBasin-7/trial_T20190908_233333_221307",
@@ -1081,7 +1081,7 @@
         {
             "task": "pick_two_obj_and_place-SprayBottle-None-Cabinet-407/trial_T20190907_144556_144188",
             "repeat_idx": 1,
-            "instruction": "Put two bottles in a cabinet under the sink."
+            "instruction": "Put two spray bottles in a cabinet under the sink."
         },
         {
             "task": "pick_two_obj_and_place-SprayBottle-None-Cabinet-407/trial_T20190907_144556_144188",
@@ -1226,12 +1226,12 @@
         {
             "task": "pick_and_place_simple-SprayBottle-None-Cabinet-413/trial_T20190907_114931_692464",
             "repeat_idx": 1,
-            "instruction": "Move the cleaner from the toilet to the cabinet under the sinks"
+            "instruction": "Move the trigger-operated cleaner from the toilet to the cabinet under the sinks"
         },
         {
             "task": "pick_and_place_simple-SprayBottle-None-Cabinet-413/trial_T20190907_114931_692464",
             "repeat_idx": 2,
-            "instruction": "Put the green bottle in the cabinet under the sink"
+            "instruction": "Put the green spray bottle in the cabinet under the sink"
         },
         {
             "task": "pick_and_place_simple-Mug-None-Dresser-311/trial_T20190909_152837_739016",
@@ -1256,7 +1256,7 @@
         {
             "task": "pick_and_place_simple-SprayBottle-None-Toilet-415/trial_T20190909_075955_678702",
             "repeat_idx": 1,
-            "instruction": "knock an empty toilet paper roll off of the back of the toilet while placing a spray bottle next to it"
+            "instruction": "Place a spray bottle of the back of the toilet while placing a spray bottle next to it"
         }
     ],
     "visual_appearance": [

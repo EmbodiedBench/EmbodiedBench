@@ -143,6 +143,7 @@ python -m embodiedbench.envs.eb_alfred.scripts.startx 1
 ## EB-Alfred
 
 > Update: the latest EB-ALFRED environment fixes a rare AI2-THOR navigation issue where `find` could occasionally teleport the agent out of the room or report success when the target was not visible. To reproduce EB-ALFRED results from before this environment fix, use commit `5fdee379ad933287ebad3b0a0ed00c0637b3502a`.
+> Update: the latest EB-ALFRED dataset also fixes several split instructions so SprayBottle tasks use precise object descriptions instead of ambiguous bottle/cleaner wording. Use the same commit above to reproduce results from before the environment and dataset fixes.
 
 Download dataset from huggingface.
 ```bash
